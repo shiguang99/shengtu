@@ -3,414 +3,1287 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI 图像生成器</title>
+<title>AI 图像启动器</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --bg: #0f0f10;
+    --surface: #1a1a1c;
+    --surface2: #222225;
+    --border: #2e2e32;
+    --accent: #e8b84b;
+    --accent-dim: #b8902e;
+    --text: #e2e2e6;
+    --text-muted: #888892;
+    --text-dim: #555560;
+    --green: #4ade80;
+    --red: #f87171;
+    --blue: #60a5fa;
+    --radius: 6px;
+    --font: 'Noto Sans SC', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    font-family: 'Courier New', monospace;
-    background: #0d0d0d;
-    color: #e0e0e0;
-    min-height: 100vh;
-    padding: 20px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
+  /* ── Header ── */
   .header {
     display: flex;
     align-items: center;
-    gap: 10px;
-    border-bottom: 1px solid #2a2a2a;
-    padding-bottom: 14px;
-    margin-bottom: 18px;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
   }
-  .header h1 { font-size: 20px; color: #f5c842; flex: 1; }
-  .header span { font-size: 24px; }
-
-  .card {
-    background: #141414;
-    border: 1px solid #252525;
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 14px;
+  .header-left h1 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.03em;
   }
-
-  .section-title {
+  .header-left .subtitle {
     font-size: 11px;
-    color: #666;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    margin-bottom: 12px;
+    color: var(--text-muted);
+    margin-top: 1px;
   }
-
-  label {
-    display: block;
-    font-size: 11px;
-    color: #777;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 5px;
-    margin-top: 12px;
-  }
-  label:first-of-type { margin-top: 0; }
-
-  input, select, textarea {
-    width: 100%;
-    background: #1c1c1c;
-    border: 1px solid #2e2e2e;
-    border-radius: 7px;
-    padding: 9px 12px;
-    color: #e0e0e0;
-    font-size: 13px;
-    font-family: inherit;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  input:focus, select:focus, textarea:focus {
-    border-color: #f5c842;
-  }
-  textarea { resize: vertical; line-height: 1.6; }
-
-  .row { display: flex; gap: 10px; }
-  .row > div { flex: 1; }
-
-  .hint {
-    font-size: 11px;
-    color: #555;
-    margin-top: 5px;
-    line-height: 1.5;
-  }
-
-  .gen-btn {
-    width: 100%;
-    margin-top: 14px;
-    background: #f5c842;
-    color: #000;
-    border: none;
-    border-radius: 9px;
-    padding: 13px;
-    font-size: 15px;
-    font-weight: bold;
+  .header-left .subtitle span { color: var(--accent); }
+  .nav-tabs { display: flex; gap: 6px; }
+  .nav-tab {
+    padding: 6px 18px;
+    border-radius: var(--radius);
     cursor: pointer;
-    letter-spacing: 1px;
-    font-family: inherit;
-    transition: opacity 0.2s, transform 0.1s;
-  }
-  .gen-btn:hover { opacity: 0.9; }
-  .gen-btn:active { transform: scale(0.98); }
-  .gen-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  .status {
-    border-radius: 9px;
-    padding: 11px 14px;
     font-size: 13px;
-    line-height: 1.7;
-    margin-bottom: 14px;
-    display: none;
-    word-break: break-all;
+    font-family: var(--font);
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    transition: all 0.15s;
   }
-  .status.error   { background: #1e0e0e; border: 1px solid #cc3333; display: block; }
-  .status.success { background: #0e1e0e; border: 1px solid #33aa55; display: block; }
-  .status.info    { background: #0e0e1e; border: 1px solid #3355cc; display: block; }
+  .nav-tab:hover { color: var(--text); border-color: #444; }
+  .nav-tab.active { background: var(--accent); color: #1a1200; border-color: var(--accent); font-weight: 700; }
 
-  .gallery {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 14px;
-    margin-top: 4px;
-  }
-
-  .img-card {
-    background: #141414;
-    border: 1px solid #252525;
-    border-radius: 12px;
-    overflow: hidden;
-  }
-  .img-card img { width: 100%; display: block; }
-
-  .img-actions {
+  /* ── Layout ── */
+  .main {
     display: flex;
-    gap: 0;
-    border-top: 1px solid #252525;
-  }
-  .img-actions button {
     flex: 1;
-    background: transparent;
-    border: none;
-    color: #888;
-    padding: 10px;
-    cursor: pointer;
-    font-size: 13px;
-    font-family: inherit;
-    transition: color 0.2s, background 0.2s;
-  }
-  .img-actions button:hover { background: #1e1e1e; color: #e0e0e0; }
-  .img-actions button + button { border-left: 1px solid #252525; }
-
-  .revised {
-    font-size: 11px;
-    color: #555;
-    padding: 6px 12px;
-    font-style: italic;
-    line-height: 1.5;
+    overflow: hidden;
+    gap: 0;
   }
 
-  .toggle-btn {
-    background: transparent;
-    border: 1px solid #333;
-    color: #777;
-    padding: 5px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 11px;
-    font-family: inherit;
-    margin-left: auto;
+  /* ── Left panel ── */
+  .left-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 12px;
+    gap: 10px;
   }
 
-  .collapsible { transition: all 0.2s; }
+  /* ── Right panel ── */
+  .right-panel {
+    width: 260px;
+    flex-shrink: 0;
+    border-left: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
 
-  /* 历史记录 */
-  .history-list { list-style: none; }
-  .history-item {
-    padding: 8px 10px;
-    border-bottom: 1px solid #1e1e1e;
-    font-size: 12px;
-    color: #888;
+  /* ── Mode cards ── */
+  .mode-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .mode-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 12px;
     cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .mode-card:hover { border-color: #444; }
+  .mode-card.active { background: #2a2310; border-color: var(--accent); }
+  .mode-card .card-title { font-size: 13px; font-weight: 700; color: var(--text); }
+  .mode-card.active .card-title { color: var(--accent); }
+  .mode-card .card-desc { font-size: 11px; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
+
+  /* ── Prompt area ── */
+  .prompt-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  }
+  .prompt-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
   }
-  .history-item:hover { background: #1a1a1a; color: #e0e0e0; }
-  .history-item:last-child { border-bottom: none; }
+  .prompt-label { font-size: 12px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.05em; text-transform: uppercase; }
+  .prompt-stats { font-size: 11px; color: var(--text-dim); font-family: var(--mono); }
+  textarea#prompt {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    line-height: 1.7;
+    padding: 10px 12px;
+    resize: none;
+  }
+  textarea#prompt::placeholder { color: var(--text-dim); }
 
-  @media (max-width: 500px) {
-    .row { flex-direction: column; }
-    body { padding: 12px; }
+  /* ── Negative prompt ── */
+  .neg-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    flex-shrink: 0;
   }
+  .neg-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.15s;
+  }
+  .neg-header.open { border-bottom-color: var(--border); }
+  .neg-label { font-size: 12px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.05em; text-transform: uppercase; }
+  .neg-toggle { font-size: 11px; color: var(--text-dim); }
+  textarea#negprompt {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-muted);
+    font-family: var(--font);
+    font-size: 12px;
+    line-height: 1.6;
+    padding: 8px 12px;
+    resize: none;
+    height: 60px;
+    display: none;
+  }
+  textarea#negprompt.visible { display: block; }
+
+  /* ── Size grid ── */
+  .size-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    flex-shrink: 0;
+  }
+  .size-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .size-label { font-size: 12px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.05em; text-transform: uppercase; }
+  .size-hint { font-size: 11px; color: var(--text-dim); }
+  .size-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 5px;
+    padding: 8px;
+  }
+  .size-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 7px 4px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.12s;
+    color: var(--text);
+  }
+  .size-btn:hover { border-color: #444; background: #2a2a2e; }
+  .size-btn.active { background: #2a2310; border-color: var(--accent); color: var(--accent); }
+  .size-btn .ratio { font-size: 12px; font-weight: 700; }
+  .size-btn .pixels { font-size: 10px; color: var(--text-dim); margin-top: 1px; font-family: var(--mono); }
+  .size-btn.active .pixels { color: var(--accent-dim); }
+
+  /* ── Status bar ── */
+  .status-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 7px 12px;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 34px;
+  }
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    flex-shrink: 0;
+  }
+  .status-dot.running { background: var(--accent); animation: pulse 1s infinite; }
+  .status-dot.error { background: var(--red); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* ── Right panel sections ── */
+  .panel-section { display: flex; flex-direction: column; gap: 8px; }
+  .panel-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Output gallery */
+  .output-area {
+    min-height: 120px;
+    background: var(--surface2);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+    font-size: 11px;
+    text-align: center;
+    overflow: hidden;
+    position: relative;
+  }
+  .output-area img { width: 100%; height: auto; display: block; border-radius: var(--radius); }
+  .output-placeholder { padding: 20px; line-height: 1.8; }
+
+  /* Mode toggle */
+  .mode-toggle { display: flex; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .mode-toggle-btn {
+    flex: 1;
+    padding: 7px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: var(--font);
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    transition: all 0.15s;
+  }
+  .mode-toggle-btn.active { background: var(--accent); color: #1a1200; font-weight: 700; }
+
+  /* Prompt source */
+  .source-list { display: flex; flex-direction: column; gap: 4px; }
+  .source-item {
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-muted);
+    background: var(--surface2);
+    border: 1px solid transparent;
+    transition: all 0.12s;
+    text-align: center;
+  }
+  .source-item:hover { border-color: var(--border); color: var(--text); }
+  .source-item.active { border-color: var(--accent-dim); color: var(--accent); background: #2a2310; }
+
+  /* API key */
+  .key-input-wrap { display: flex; flex-direction: column; gap: 5px; }
+  .key-input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 7px 10px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 11px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .key-input:focus { border-color: var(--accent-dim); }
+  .key-input.saved { border-color: #2a5c3a; background: #0f2218; }
+  .save-btn {
+    padding: 7px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text-muted);
+    font-family: var(--font);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .save-btn:hover { border-color: #444; color: var(--text); }
+  .save-btn.saved { border-color: #2a5c3a; color: var(--green); background: #0f2218; }
+
+  /* Ref image */
+  .ref-drop {
+    min-height: 70px;
+    background: var(--surface2);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+    font-size: 11px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    padding: 10px;
+    position: relative;
+  }
+  .ref-drop:hover { border-color: #555; }
+  .ref-drop.has-img { border-style: solid; border-color: var(--border); }
+  .ref-drop img { width: 100%; height: auto; max-height: 90px; object-fit: cover; border-radius: 4px; }
+  .ref-drop .remove-ref {
+    position: absolute; top: 4px; right: 4px;
+    background: rgba(0,0,0,0.7); color: #fff;
+    border-radius: 50%; width: 18px; height: 18px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; cursor: pointer; border: none;
+    transition: background 0.15s;
+  }
+  .ref-drop .remove-ref:hover { background: var(--red); }
+  .add-ref-btn {
+    padding: 6px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-muted);
+    font-size: 11px;
+    cursor: pointer;
+    font-family: var(--font);
+    transition: all 0.15s;
+  }
+  .add-ref-btn:hover { border-color: #555; color: var(--text); }
+
+  /* Generate button */
+  .gen-btn {
+    width: 100%;
+    padding: 12px;
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius);
+    color: #1a1200;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: var(--font);
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: all 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .gen-btn:hover { background: #f0c558; }
+  .gen-btn:active { transform: scale(0.98); }
+  .gen-btn:disabled { background: var(--border); color: var(--text-dim); cursor: not-allowed; transform: none; }
+  .gen-btn .btn-shine {
+    position: absolute; top: 0; left: -100%;
+    width: 60%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    transform: skewX(-20deg);
+    animation: shine 2.5s infinite;
+  }
+  @keyframes shine { 0%{left:-100%} 100%{left:200%} }
+
+  /* History / Output tabs */
+  .page { display: none; flex-direction: column; flex: 1; overflow: hidden; padding: 12px; gap: 10px; }
+  .page.active { display: flex; }
+  .history-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; overflow-y: auto; }
+  .history-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .history-item:hover { border-color: #444; }
+  .history-item img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
+  .history-item .hi-meta { padding: 7px 8px; }
+  .history-item .hi-ratio { font-size: 11px; color: var(--accent); font-family: var(--mono); }
+  .history-item .hi-prompt { font-size: 10px; color: var(--text-dim); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .history-empty { color: var(--text-dim); text-align: center; padding: 40px; font-size: 13px; }
+
+  /* Output big view */
+  .output-page-img { flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .output-page-img img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: var(--radius); }
+  .output-page-empty { color: var(--text-dim); text-align: center; padding: 60px; }
+  .output-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .action-btn {
+    flex: 1;
+    padding: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text-muted);
+    font-family: var(--font);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .action-btn:hover { border-color: #555; color: var(--text); }
+  .action-btn.primary { background: #2a2310; border-color: var(--accent-dim); color: var(--accent); }
+  .action-btn.primary:hover { background: #332c14; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #444; }
+
+  /* Settings page */
+  .settings-section { display: flex; flex-direction: column; gap: 14px; max-width: 500px; }
+  .setting-group { display: flex; flex-direction: column; gap: 6px; }
+  .setting-label { font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+  .setting-input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px 12px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+  .setting-input:focus { border-color: var(--accent-dim); }
+  .setting-select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px 12px;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 12px;
+    outline: none;
+    width: 100%;
+    cursor: pointer;
+  }
+  .setting-desc { font-size: 11px; color: var(--text-dim); line-height: 1.5; }
+  .setting-save-btn {
+    padding: 10px 24px;
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius);
+    color: #1a1200;
+    font-weight: 700;
+    font-family: var(--font);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s;
+    align-self: flex-start;
+  }
+  .setting-save-btn:hover { background: #f0c558; }
+
+  /* Tooltip badge */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 7px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 10px;
+    color: var(--text-dim);
+    font-family: var(--mono);
+  }
+
+  /* Progress bar */
+  .progress-bar {
+    width: 100%;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    display: none;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.8);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000;
+    display: none;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    max-width: 500px;
+    width: 90%;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .modal h2 { font-size: 15px; color: var(--text); }
+  .modal p { font-size: 13px; color: var(--text-muted); line-height: 1.7; }
+  .modal-close {
+    padding: 8px 20px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    cursor: pointer;
+    align-self: flex-end;
+    transition: border-color 0.15s;
+  }
+  .modal-close:hover { border-color: #555; }
 </style>
 </head>
 <body>
 
+<!-- Header -->
 <div class="header">
-  <span>⚡</span>
-  <h1>AI 图像生成器</h1>
+  <div class="header-left">
+    <h1>⚡ AI 图像启动器</h1>
+    <div class="subtitle">当前：<span id="current-mode-label">文生图</span></div>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchPage('generate')">启动生成</button>
+    <button class="nav-tab" onclick="switchPage('history')">历史</button>
+    <button class="nav-tab" onclick="switchPage('output')">输出</button>
+    <button class="nav-tab" onclick="switchPage('settings')">设置</button>
+  </div>
 </div>
 
-<!-- 设置卡片 -->
-<div class="card" id="settings-card">
-  <div style="display:flex;align-items:center;margin-bottom:12px;">
-    <span class="section-title" style="margin:0;">⚙️ 接口设置</span>
-    <button class="toggle-btn" onclick="toggleSettings()">收起 ▲</button>
+<!-- Main -->
+<div class="main">
+
+  <!-- ═══ PAGE: Generate ═══ -->
+  <div id="page-generate" class="page active left-panel">
+
+    <!-- Mode Cards -->
+    <div class="mode-cards">
+      <div class="mode-card active" id="card-t2i" onclick="setMode('t2i')">
+        <div class="card-title">文生图</div>
+        <div class="card-desc">清空本轮参考图，只按提示词生成。</div>
+      </div>
+      <div class="mode-card" id="card-i2i" onclick="setMode('i2i')">
+        <div class="card-title">图生图</div>
+        <div class="card-desc">拖入多张参考图并保持顺序。</div>
+      </div>
+      <div class="mode-card" id="card-long" onclick="setMode('long')">
+        <div class="card-title">长提示词</div>
+        <div class="card-desc">适合中文长文本，不依赖命令行粘贴。</div>
+      </div>
+      <div class="mode-card" id="card-key" onclick="switchPage('settings')">
+        <div class="card-title">API Key</div>
+        <div class="card-desc">写入设置页面并保存到本地。</div>
+      </div>
+    </div>
+
+    <!-- Prompt -->
+    <div class="prompt-section">
+      <div class="prompt-header">
+        <span class="prompt-label">提示词</span>
+        <span class="prompt-stats" id="prompt-stats">0 字 · 1 行</span>
+      </div>
+      <textarea id="prompt" placeholder="在此输入提示词，支持中英文...&#10;&#10;例如：一只橘猫坐在窗台上，阳光斜射，电影感，4K" oninput="updateStats()"></textarea>
+    </div>
+
+    <!-- Negative Prompt -->
+    <div class="neg-section">
+      <div class="neg-header" id="neg-header" onclick="toggleNeg()">
+        <span class="neg-label">负向提示词</span>
+        <span class="neg-toggle" id="neg-toggle">▶ 展开</span>
+      </div>
+      <textarea id="negprompt" placeholder="不想要的内容，如：模糊, 变形, 低质量, 水印..."></textarea>
+    </div>
+
+    <!-- Size -->
+    <div class="size-section">
+      <div class="size-header">
+        <span class="size-label">尺寸选择</span>
+        <span class="size-hint">含全部 bat 预设</span>
+      </div>
+      <div class="size-grid" id="size-grid"></div>
+    </div>
+
+    <!-- Status -->
+    <div class="status-bar">
+      <div class="status-dot" id="status-dot"></div>
+      <span id="status-text">启动器已就绪。</span>
+      <div class="progress-bar" id="progress-bar" style="margin-left:auto;flex:1;max-width:120px;">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+    </div>
   </div>
-  <div id="settings-body">
-    <label>API KEY</label>
-    <input type="password" id="apiKey" placeholder="sk-..." />
-    <p class="hint">保存在本页内存中，刷新后需重新填写。不会上传任何服务器。</p>
 
-    <label>API 地址 (Base URL)</label>
-    <input type="text" id="baseUrl" value="https://image.fushengyunsuan.cn/v1" />
+  <!-- Right Sidebar (only visible on generate page) -->
+  <div class="right-panel" id="right-sidebar">
 
-    <label>模型名称</label>
-    <input type="text" id="model" value="gpt-image-2" />
+    <!-- Output thumbnail -->
+    <div class="panel-section">
+      <div class="panel-title">输出图库</div>
+      <div class="output-area" id="output-thumb">
+        <div class="output-placeholder">生成完成后会在这里显示本次图片。</div>
+      </div>
+    </div>
 
-    <div class="row" style="margin-top:12px;">
-      <div>
-        <label>尺寸</label>
-        <select id="size">
-          <option value="1024x1024">1024×1024</option>
-          <option value="1792x1024">1792×1024 (横)</option>
-          <option value="1024x1792">1024×1792 (竖)</option>
+    <!-- Generate Button -->
+    <button class="gen-btn" id="gen-btn" onclick="startGenerate()">
+      <div class="btn-shine"></div>
+      ▶ 启动生成
+    </button>
+
+    <!-- Mode toggle -->
+    <div class="panel-section">
+      <div class="panel-title">模式</div>
+      <div class="mode-toggle">
+        <button class="mode-toggle-btn active" id="toggle-t2i" onclick="setMode('t2i')">文生图</button>
+        <button class="mode-toggle-btn" id="toggle-i2i" onclick="setMode('i2i')">图生图</button>
+      </div>
+    </div>
+
+    <!-- Prompt source -->
+    <div class="panel-section">
+      <div class="panel-title">提示词来源 <span class="badge" id="source-label">新增长提示词</span></div>
+      <div class="source-list">
+        <div class="source-item active" id="src-new" onclick="setSource('new')">新增长提示词</div>
+        <div class="source-item" id="src-last" onclick="setSource('last')">复用上次</div>
+        <div class="source-item" id="src-short" onclick="setSource('short')">短提示词</div>
+        <div class="source-item" id="src-edit" onclick="setSource('edit')">编辑上次</div>
+        <div class="source-item" id="src-txt" onclick="importTxt()">导入 TXT</div>
+      </div>
+    </div>
+
+    <!-- API Key inline -->
+    <div class="panel-section">
+      <div class="panel-title">API Key</div>
+      <div class="key-input-wrap">
+        <input type="password" class="key-input" id="sidebar-key" placeholder="sk-..." oninput="onKeyInput()">
+        <div class="save-btn" id="sidebar-save-btn" onclick="saveKeyFromSidebar()">保存 Key</div>
+      </div>
+    </div>
+
+    <!-- Ref images -->
+    <div class="panel-section">
+      <div class="panel-title">参考图</div>
+      <div class="ref-drop" id="ref-drop" onclick="triggerRefUpload()">
+        <span id="ref-placeholder">拖入或点击上传参考图</span>
+      </div>
+      <button class="add-ref-btn" onclick="triggerRefUpload()">＋ 添加参考图</button>
+      <input type="file" id="ref-input" accept="image/*" style="display:none" onchange="handleRefUpload(this)">
+    </div>
+
+  </div>
+
+  <!-- ═══ PAGE: History ═══ -->
+  <div id="page-history" class="page" style="flex:1">
+    <div class="panel-title" style="flex-shrink:0">生成历史 <span class="badge" id="history-count">0 张</span></div>
+    <div class="history-grid" id="history-grid">
+      <div class="history-empty" style="grid-column:1/-1">还没有生成过图片，快去启动生成吧！</div>
+    </div>
+  </div>
+
+  <!-- ═══ PAGE: Output ═══ -->
+  <div id="page-output" class="page" style="flex:1">
+    <div class="panel-title" style="flex-shrink:0">输出预览</div>
+    <div class="output-page-img" id="output-page-img">
+      <div class="output-page-empty">暂无输出图片。</div>
+    </div>
+    <div class="output-actions">
+      <button class="action-btn primary" onclick="downloadCurrent()">⬇ 下载图片</button>
+      <button class="action-btn" onclick="copyPromptCurrent()">⎘ 复制提示词</button>
+      <button class="action-btn" onclick="use2i2i()">↺ 用于图生图</button>
+    </div>
+  </div>
+
+  <!-- ═══ PAGE: Settings ═══ -->
+  <div id="page-settings" class="page" style="flex:1;overflow-y:auto">
+    <div class="panel-title" style="flex-shrink:0">设置</div>
+    <div class="settings-section">
+
+      <div class="setting-group">
+        <div class="setting-label">API Key</div>
+        <input type="password" class="setting-input" id="setting-key" placeholder="sk-... 或你的自定义 key">
+        <div class="setting-desc">保存在浏览器 localStorage，不会上传任何服务器。</div>
+      </div>
+
+      <div class="setting-group">
+        <div class="setting-label">API 地址（Base URL）</div>
+        <input type="text" class="setting-input" id="setting-baseurl" placeholder="https://api.openai.com/v1" value="https://api.openai.com/v1">
+        <div class="setting-desc">支持 OpenAI 兼容接口，如 SiliconFlow、智谱、自建代理等。</div>
+      </div>
+
+      <div class="setting-group">
+        <div class="setting-label">图像模型</div>
+        <select class="setting-select" id="setting-model">
+          <option value="dall-e-3">DALL·E 3（OpenAI）</option>
+          <option value="dall-e-2">DALL·E 2（OpenAI）</option>
+          <option value="cogview-3-plus">CogView-3-Plus（智谱）</option>
+          <option value="Kolors">Kolors（快手）</option>
+          <option value="stable-diffusion-3-5-large">SD 3.5 Large（SiliconFlow）</option>
+          <option value="black-forest-labs/FLUX.1-schnell">FLUX.1 Schnell（SiliconFlow）</option>
+          <option value="custom">自定义</option>
         </select>
       </div>
-      <div>
-        <label>质量</label>
-        <select id="quality">
-          <option value="standard">标准</option>
-          <option value="hd">高清 (HD)</option>
-        </select>
+
+      <div class="setting-group" id="custom-model-group" style="display:none">
+        <div class="setting-label">自定义模型名</div>
+        <input type="text" class="setting-input" id="setting-custom-model" placeholder="输入模型名称">
       </div>
-      <div>
-        <label>数量</label>
-        <select id="n">
-          <option value="1">1 张</option>
+
+      <div class="setting-group">
+        <div class="setting-label">生成数量（每次）</div>
+        <select class="setting-select" id="setting-n">
+          <option value="1" selected>1 张</option>
           <option value="2">2 张</option>
           <option value="4">4 张</option>
         </select>
       </div>
+
+      <div class="setting-group">
+        <div class="setting-label">图片质量</div>
+        <select class="setting-select" id="setting-quality">
+          <option value="standard" selected>标准</option>
+          <option value="hd">HD（高清）</option>
+        </select>
+      </div>
+
+      <button class="setting-save-btn" onclick="saveSettings()">保存设置</button>
+      <div class="setting-desc" id="setting-status"></div>
     </div>
   </div>
+
 </div>
 
-<!-- 提示词 -->
-<div class="card">
-  <label style="margin-top:0;">图像描述 (Prompt)</label>
-  <textarea id="prompt" rows="4" placeholder="描述你想要生成的图像，英文效果更佳…&#10;例：A serene Japanese garden at sunset, studio ghibli style"></textarea>
-  <button class="gen-btn" id="genBtn" onclick="generate()">✨ 生成图像</button>
-</div>
-
-<!-- 状态 -->
-<div class="status" id="status"></div>
-
-<!-- 结果 -->
-<div class="gallery" id="gallery"></div>
-
-<!-- 历史 -->
-<div class="card" id="history-card" style="display:none;">
-  <div style="display:flex;align-items:center;margin-bottom:10px;">
-    <span class="section-title" style="margin:0;">🕓 最近 Prompt</span>
-    <button class="toggle-btn" onclick="clearHistory()">清空</button>
+<!-- Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2 id="modal-title">提示</h2>
+    <p id="modal-body"></p>
+    <button class="modal-close" onclick="closeModal()">关闭</button>
   </div>
-  <ul class="history-list" id="history-list"></ul>
 </div>
+
+<input type="file" id="txt-input" accept=".txt" style="display:none" onchange="handleTxtImport(this)">
 
 <script>
-  let settingsOpen = true;
-  let history = JSON.parse(localStorage.getItem('img_history') || '[]');
+// ─── State ───
+const state = {
+  mode: 't2i',
+  source: 'new',
+  selectedSize: '1:1',
+  history: [],
+  currentOutput: null,
+  isGenerating: false,
+  refImage: null,
+};
 
-  function toggleSettings() {
-    settingsOpen = !settingsOpen;
-    document.getElementById('settings-body').style.display = settingsOpen ? '' : 'none';
-    document.querySelector('.toggle-btn').textContent = settingsOpen ? '收起 ▲' : '展开 ▼';
-  }
+const SIZES = [
+  {ratio:'1:1', w:1024, h:1024},
+  {ratio:'2:3', w:832, h:1248},
+  {ratio:'3:2', w:1248, h:832},
+  {ratio:'3:4', w:768, h:1024},
+  {ratio:'4:3', w:1024, h:768},
+  {ratio:'9:16', w:576, h:1024},
+  {ratio:'16:9', w:1024, h:576},
+  {ratio:'4:5', w:832, h:1040},
+  {ratio:'5:4', w:1040, h:832},
+  {ratio:'2:1', w:1024, h:512},
+  {ratio:'1:2', w:512, h:1024},
+  {ratio:'3:5', w:720, h:1200},
+  {ratio:'5:3', w:1200, h:720},
+  {ratio:'2:5', w:512, h:1280},
+  {ratio:'5:2', w:1280, h:512},
+];
 
-  function setStatus(type, msg) {
-    const el = document.getElementById('status');
-    el.className = 'status ' + type;
-    el.textContent = (type === 'error' ? '❌ ' : type === 'success' ? '✅ ' : 'ℹ️ ') + msg;
-  }
+// ─── Init ───
+function init() {
+  buildSizeGrid();
+  loadFromStorage();
+  loadHistory();
+}
 
-  function hideStatus() {
-    document.getElementById('status').className = 'status';
-  }
+function buildSizeGrid() {
+  const grid = document.getElementById('size-grid');
+  grid.innerHTML = SIZES.map(s => `
+    <div class="size-btn ${s.ratio === state.selectedSize ? 'active' : ''}" onclick="selectSize('${s.ratio}')">
+      <div class="ratio">${s.ratio}</div>
+      <div class="pixels">${s.w}×${s.h}</div>
+    </div>
+  `).join('');
+}
 
-  function addToHistory(p) {
-    history = [p, ...history.filter(x => x !== p)].slice(0, 10);
-    try { localStorage.setItem('img_history', JSON.stringify(history)); } catch(e) {}
-    renderHistory();
-  }
+function selectSize(ratio) {
+  state.selectedSize = ratio;
+  document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+}
 
-  function renderHistory() {
-    const list = document.getElementById('history-list');
-    const card = document.getElementById('history-card');
-    if (history.length === 0) { card.style.display = 'none'; return; }
-    card.style.display = '';
-    list.innerHTML = history.map(p =>
-      `<li class="history-item" onclick="useHistory('${p.replace(/'/g,"\\'")}')">
-        <span>${p.length > 50 ? p.slice(0,50)+'…' : p}</span>
-        <span style="color:#444;font-size:10px;">↩</span>
-      </li>`
-    ).join('');
-  }
+// ─── Pages ───
+function switchPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  const pageEl = document.getElementById('page-' + page);
+  if (pageEl) pageEl.classList.add('active');
+  const tabs = ['generate','history','output','settings'];
+  const idx = tabs.indexOf(page);
+  document.querySelectorAll('.nav-tab')[idx]?.classList.add('active');
 
-  function useHistory(p) {
-    document.getElementById('prompt').value = p;
-    document.getElementById('prompt').focus();
-  }
+  const sidebar = document.getElementById('right-sidebar');
+  sidebar.style.display = page === 'generate' ? '' : 'none';
 
-  function clearHistory() {
-    history = [];
-    try { localStorage.removeItem('img_history'); } catch(e) {}
-    renderHistory();
-  }
+  if (page === 'history') renderHistory();
+}
 
-  async function generate() {
-    const apiKey = document.getElementById('apiKey').value.trim();
-    const baseUrl = document.getElementById('baseUrl').value.trim().replace(/\/$/, '');
-    const model   = document.getElementById('model').value.trim();
-    const prompt  = document.getElementById('prompt').value.trim();
-    const size    = document.getElementById('size').value;
-    const quality = document.getElementById('quality').value;
-    const n       = parseInt(document.getElementById('n').value);
+// ─── Mode ───
+function setMode(m) {
+  state.mode = m;
+  ['t2i','i2i','long','key'].forEach(id => {
+    document.getElementById('card-' + id)?.classList.remove('active');
+  });
+  document.getElementById('card-' + m)?.classList.add('active');
+  document.getElementById('toggle-t2i').classList.toggle('active', m === 't2i');
+  document.getElementById('toggle-i2i').classList.toggle('active', m === 'i2i');
+  document.getElementById('current-mode-label').textContent =
+    m === 't2i' ? '文生图' : m === 'i2i' ? '图生图' : '长提示词';
+}
 
-    if (!apiKey) { setStatus('error', '请先填写 API Key'); return; }
-    if (!prompt)  { setStatus('error', '请输入图像描述'); return; }
+// ─── Stats ───
+function updateStats() {
+  const val = document.getElementById('prompt').value;
+  const chars = val.length;
+  const lines = val.split('\n').length;
+  document.getElementById('prompt-stats').textContent = `${chars} 字 · ${lines} 行`;
+}
 
-    const btn = document.getElementById('genBtn');
-    btn.disabled = true;
-    btn.textContent = '⏳ 生成中…';
-    setStatus('info', '正在请求 ' + baseUrl + '/images/generations …');
-    document.getElementById('gallery').innerHTML = '';
+// ─── Neg prompt ───
+function toggleNeg() {
+  const ta = document.getElementById('negprompt');
+  const tog = document.getElementById('neg-toggle');
+  const header = document.getElementById('neg-header');
+  const open = ta.classList.toggle('visible');
+  tog.textContent = open ? '▼ 收起' : '▶ 展开';
+  header.classList.toggle('open', open);
+}
 
-    try {
-      const res = await fetch(`${baseUrl}/images/generations`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({ model, prompt, n, size, quality, response_format: 'b64_json' })
-      });
+// ─── Source ───
+function setSource(src) {
+  state.source = src;
+  document.querySelectorAll('.source-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('src-' + src)?.classList.add('active');
+  const labels = {new:'新增长提示词', last:'复用上次', short:'短提示词', edit:'编辑上次'};
+  document.getElementById('source-label').textContent = labels[src] || '自定义';
 
-      const text = await res.text();
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        try { const j = JSON.parse(text); msg = j?.error?.message || j?.message || msg; } catch(e) {}
-        setStatus('error', `生成失败：${msg}`);
-        return;
-      }
-
-      const data = JSON.parse(text);
-      const imgs = (data.data || []);
-      if (imgs.length === 0) { setStatus('error', '接口返回数据为空'); return; }
-
-      addToHistory(prompt);
-      setStatus('success', `生成成功，共 ${imgs.length} 张`);
-
-      const gallery = document.getElementById('gallery');
-      imgs.forEach((item, i) => {
-        const src = item.b64_json ? `data:image/png;base64,${item.b64_json}` : item.url;
-        const card = document.createElement('div');
-        card.className = 'img-card';
-        card.innerHTML = `
-          <img src="${src}" alt="generated-${i+1}" loading="lazy" />
-          ${item.revised_prompt ? `<div class="revised">✏️ ${item.revised_prompt}</div>` : ''}
-          <div class="img-actions">
-            <button onclick="downloadImg('${src}', ${i+1})">⬇ 下载</button>
-            <button onclick="copyPrompt('${prompt.replace(/'/g,"\\'")}')">📋 复制Prompt</button>
-          </div>
-        `;
-        gallery.appendChild(card);
-      });
-
-    } catch(err) {
-      if (err.message && err.message.toLowerCase().includes('fetch')) {
-        setStatus('error',
-          `网络错误（Failed to fetch）\n` +
-          `可能原因：\n` +
-          `① 该接口域名未开启 CORS 跨域支持\n` +
-          `② 网络无法访问该地址\n` +
-          `③ API Key 格式错误\n\n` +
-          `建议：用电脑浏览器直接打开此 HTML 文件测试，或换用支持 CORS 的接口`
-        );
-      } else {
-        setStatus('error', `未知错误：${err.message}`);
-      }
-    } finally {
-      btn.disabled = false;
-      btn.textContent = '✨ 生成图像';
+  if (src === 'last' || src === 'edit') {
+    const lastEntry = state.history[state.history.length - 1];
+    if (lastEntry) {
+      document.getElementById('prompt').value = lastEntry.prompt;
+      updateStats();
+      setStatus('已加载上次提示词。');
+    } else {
+      setStatus('还没有历史记录。');
     }
   }
-
-  function downloadImg(src, idx) {
-    const a = document.createElement('a');
-    a.href = src;
-    a.download = `ai-image-${idx}.png`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+  if (src === 'short') {
+    document.getElementById('prompt').value = '';
+    document.getElementById('prompt').focus();
+    setStatus('短提示词模式：请简短描述。');
   }
+}
 
-  function copyPrompt(p) {
-    navigator.clipboard.writeText(p).then(() => alert('已复制 Prompt'));
+function importTxt() {
+  document.getElementById('txt-input').click();
+}
+
+function handleTxtImport(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('prompt').value = e.target.result;
+    updateStats();
+    setStatus(`已导入 TXT：${file.name}`);
+  };
+  reader.readAsText(file, 'UTF-8');
+  input.value = '';
+}
+
+// ─── Ref image ───
+function triggerRefUpload() {
+  document.getElementById('ref-input').click();
+}
+
+function handleRefUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    state.refImage = e.target.result;
+    const drop = document.getElementById('ref-drop');
+    drop.classList.add('has-img');
+    drop.innerHTML = `
+      <img src="${e.target.result}" alt="参考图">
+      <button class="remove-ref" onclick="removeRef(event)">✕</button>
+    `;
+    if (state.mode === 't2i') setMode('i2i');
+    setStatus('参考图已加载。');
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+
+function removeRef(e) {
+  e.stopPropagation();
+  state.refImage = null;
+  const drop = document.getElementById('ref-drop');
+  drop.classList.remove('has-img');
+  drop.innerHTML = '<span id="ref-placeholder">拖入或点击上传参考图</span>';
+  setStatus('参考图已移除。');
+}
+
+// Drag & drop for ref
+const refDrop = document.getElementById('ref-drop');
+refDrop.addEventListener('dragover', e => { e.preventDefault(); refDrop.style.borderColor = 'var(--accent)'; });
+refDrop.addEventListener('dragleave', () => { refDrop.style.borderColor = ''; });
+refDrop.addEventListener('drop', e => {
+  e.preventDefault();
+  refDrop.style.borderColor = '';
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) {
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    document.getElementById('ref-input').files = dt.files;
+    handleRefUpload(document.getElementById('ref-input'));
   }
+});
 
-  // 键盘快捷键 Ctrl+Enter 生成
-  document.addEventListener('keydown', e => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generate();
-  });
+// ─── Key ───
+function onKeyInput() {
+  const key = document.getElementById('sidebar-key').value;
+  const btn = document.getElementById('sidebar-save-btn');
+  btn.classList.remove('saved');
+  btn.textContent = '保存 Key';
+}
 
-  // 初始化历史
-  renderHistory();
+function saveKeyFromSidebar() {
+  const key = document.getElementById('sidebar-key').value.trim();
+  if (!key) { showModal('提示', '请先输入 API Key。'); return; }
+  localStorage.setItem('ai_launcher_key', key);
+  document.getElementById('setting-key').value = key;
+  const btn = document.getElementById('sidebar-save-btn');
+  btn.classList.add('saved');
+  btn.textContent = '✓ 已保存';
+  const input = document.getElementById('sidebar-key');
+  input.classList.add('saved');
+  setStatus('API Key 已保存。');
+}
+
+// ─── Settings ───
+function saveSettings() {
+  const key = document.getElementById('setting-key').value.trim();
+  const baseurl = document.getElementById('setting-baseurl').value.trim();
+  const model = document.getElementById('setting-model').value;
+  const customModel = document.getElementById('setting-custom-model').value.trim();
+  const n = document.getElementById('setting-n').value;
+  const quality = document.getElementById('setting-quality').value;
+
+  if (key) {
+    localStorage.setItem('ai_launcher_key', key);
+    document.getElementById('sidebar-key').value = key;
+  }
+  localStorage.setItem('ai_launcher_baseurl', baseurl || 'https://api.openai.com/v1');
+  localStorage.setItem('ai_launcher_model', model === 'custom' ? customModel : model);
+  localStorage.setItem('ai_launcher_n', n);
+  localStorage.setItem('ai_launcher_quality', quality);
+
+  document.getElementById('setting-status').textContent = '✓ 设置已保存';
+  setTimeout(() => document.getElementById('setting-status').textContent = '', 2000);
+}
+
+function loadFromStorage() {
+  const key = localStorage.getItem('ai_launcher_key') || '';
+  const baseurl = localStorage.getItem('ai_launcher_baseurl') || 'https://api.openai.com/v1';
+  const model = localStorage.getItem('ai_launcher_model') || 'dall-e-3';
+  const n = localStorage.getItem('ai_launcher_n') || '1';
+  const quality = localStorage.getItem('ai_launcher_quality') || 'standard';
+
+  if (key) {
+    document.getElementById('sidebar-key').value = key;
+    document.getElementById('sidebar-key').classList.add('saved');
+    document.getElementById('setting-key').value = key;
+  }
+  document.getElementById('setting-baseurl').value = baseurl;
+  document.getElementById('setting-n').value = n;
+  document.getElementById('setting-quality').value = quality;
+
+  // Set model
+  const modelSel = document.getElementById('setting-model');
+  const knownModels = Array.from(modelSel.options).map(o => o.value);
+  if (knownModels.includes(model)) {
+    modelSel.value = model;
+  } else {
+    modelSel.value = 'custom';
+    document.getElementById('setting-custom-model').value = model;
+    document.getElementById('custom-model-group').style.display = '';
+  }
+}
+
+document.getElementById('setting-model').addEventListener('change', function() {
+  document.getElementById('custom-model-group').style.display = this.value === 'custom' ? '' : 'none';
+});
+
+// ─── Generate ───
+async function startGenerate() {
+  if (state.isGenerating) return;
+
+  const prompt = document.getElementById('prompt').value.trim();
+  if (!prompt) { showModal('提示', '请先输入提示词！'); return; }
+
+  const key = localStorage.getItem('ai_launcher_key') || document.getElementById('sidebar-key').value.trim();
+  if (!key) { showModal('缺少 API Key', '请在右侧或设置页填写 API Key 后保存。'); return; }
+
+  const baseurl = localStorage.getItem('ai_launcher_baseurl') || 'https://api.openai.com/v1';
+  const model = localStorage.getItem('ai_launcher_model') || 'dall-e-3';
+  const n = parseInt(localStorage.getItem('ai_launcher_n') || '1');
+  const quality = localStorage.getItem('ai_launcher_quality') || 'standard';
+  const size = SIZES.find(s => s.ratio === state.selectedSize);
+  const sizeStr = `${size.w}x${size.h}`;
+
+  state.isGenerating = true;
+  document.getElementById('gen-btn').disabled = true;
+  document.getElementById('gen-btn').textContent = '生成中...';
+  setStatus('正在调用 API，请稍候…', 'running');
+  document.getElementById('progress-bar').style.display = 'block';
+  animateProgress();
+
+  try {
+    const body = {
+      model,
+      prompt,
+      n,
+      size: sizeStr,
+      quality,
+      response_format: 'url',
+    };
+
+    const res = await fetch(`${baseurl}/images/generations`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${key}`,
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error?.message || `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    const images = data.data || [];
+
+    if (!images.length) throw new Error('API 返回了空结果');
+
+    // Save to history
+    const entry = {
+      id: Date.now(),
+      prompt,
+      size: state.selectedSize,
+      sizeStr,
+      model,
+      images: images.map(i => i.url || i.b64_json),
+      isB64: !!images[0].b64_json,
+      ts: new Date().toLocaleString('zh-CN'),
+    };
+    state.history.push(entry);
+    state.currentOutput = entry;
+    saveHistory();
+
+    // Show in sidebar thumb
+    const imgSrc = entry.isB64 ? `data:image/png;base64,${entry.images[0]}` : entry.images[0];
+    document.getElementById('output-thumb').innerHTML = `<img src="${imgSrc}" alt="output">`;
+
+    // Update output page
+    document.getElementById('output-page-img').innerHTML = `<img src="${imgSrc}" alt="output">`;
+
+    setStatus(`✓ 生成完成！共 ${images.length} 张，点击「输出」页查看。`, 'done');
+    document.getElementById('progress-fill').style.width = '100%';
+    setTimeout(() => {
+      document.getElementById('progress-bar').style.display = 'none';
+      document.getElementById('progress-fill').style.width = '0%';
+    }, 800);
+
+  } catch (err) {
+    setStatus(`✕ 生成失败：${err.message}`, 'error');
+    document.getElementById('progress-bar').style.display = 'none';
+    document.getElementById('progress-fill').style.width = '0%';
+    showModal('生成失败', `错误信息：${err.message}\n\n请检查：\n1. API Key 是否正确\n2. API 地址是否填写正确\n3. 模型是否支持该尺寸`);
+  } finally {
+    state.isGenerating = false;
+    document.getElementById('gen-btn').disabled = false;
+    document.getElementById('gen-btn').innerHTML = '<div class="btn-shine"></div>▶ 启动生成';
+  }
+}
+
+let progressInterval;
+function animateProgress() {
+  let w = 0;
+  clearInterval(progressInterval);
+  progressInterval = setInterval(() => {
+    w = Math.min(w + Math.random() * 8, 90);
+    document.getElementById('progress-fill').style.width = w + '%';
+    if (w >= 90) clearInterval(progressInterval);
+  }, 400);
+}
+
+// ─── Status ───
+function setStatus(msg, type = 'idle') {
+  document.getElementById('status-text').textContent = msg;
+  const dot = document.getElementById('status-dot');
+  dot.className = 'status-dot';
+  if (type === 'running') dot.classList.add('running');
+  if (type === 'error') dot.classList.add('error');
+}
+
+// ─── History ───
+function saveHistory() {
+  // Store only last 50, avoid storing b64 to save space
+  const toSave = state.history.slice(-50).map(e => ({
+    ...e,
+    images: e.isB64 ? ['[base64 图片，不缓存]'] : e.images,
+    isB64: false,
+  }));
+  try { localStorage.setItem('ai_launcher_history', JSON.stringify(toSave)); } catch(e) {}
+}
+
+function loadHistory() {
+  try {
+    const raw = localStorage.getItem('ai_launcher_history');
+    if (raw) state.history = JSON.parse(raw);
+  } catch(e) {}
+}
+
+function renderHistory() {
+  const grid = document.getElementById('history-grid');
+  document.getElementById('history-count').textContent = `${state.history.length} 张`;
+  if (!state.history.length) {
+    grid.innerHTML = '<div class="history-empty" style="grid-column:1/-1">还没有生成过图片，快去启动生成吧！</div>';
+    return;
+  }
+  grid.innerHTML = [...state.history].reverse().map(e => `
+    <div class="history-item" onclick="viewHistoryEntry(${e.id})">
+      ${e.images[0] && e.images[0] !== '[base64 图片，不缓存]'
+        ? `<img src="${e.images[0]}" alt="" loading="lazy" onerror="this.parentElement.style.display='none'">`
+        : `<div style="aspect-ratio:1;background:var(--surface2);display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:11px">图片链接已过期</div>`}
+      <div class="hi-meta">
+        <div class="hi-ratio">${e.size} · ${e.model}</div>
+        <div class="hi-prompt">${e.prompt}</div>
+        <div class="hi-ratio" style="color:var(--text-dim);font-size:10px;margin-top:2px">${e.ts}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function viewHistoryEntry(id) {
+  const entry = state.history.find(e => e.id === id);
+  if (!entry) return;
+  state.currentOutput = entry;
+  const imgSrc = entry.images[0];
+  if (imgSrc && imgSrc !== '[base64 图片，不缓存]') {
+    document.getElementById('output-page-img').innerHTML = `<img src="${imgSrc}" alt="output">`;
+  }
+  document.getElementById('prompt').value = entry.prompt;
+  updateStats();
+  switchPage('output');
+}
+
+// ─── Output actions ───
+function downloadCurrent() {
+  if (!state.currentOutput) { showModal('提示', '暂无输出图片。'); return; }
+  const url = state.currentOutput.images[0];
+  if (!url || url === '[base64 图片，不缓存]') { showModal('提示', '图片链接已失效，无法下载。'); return; }
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `ai-image-${state.currentOutput.id}.png`;
+  a.target = '_blank';
+  a.click();
+}
+
+function copyPromptCurrent() {
+  if (!state.currentOutput) return;
+  navigator.clipboard.writeText(state.currentOutput.prompt).then(() => setStatus('✓ 提示词已复制。'));
+}
+
+function use2i2i() {
+  if (!state.currentOutput) return;
+  const url = state.currentOutput.images[0];
+  if (!url || url === '[base64 图片，不缓存]') { showModal('提示', '图片链接已失效。'); return; }
+  // Load as ref image
+  const drop = document.getElementById('ref-drop');
+  drop.classList.add('has-img');
+  drop.innerHTML = `<img src="${url}" alt="参考图"><button class="remove-ref" onclick="removeRef(event)">✕</button>`;
+  state.refImage = url;
+  setMode('i2i');
+  switchPage('generate');
+  setStatus('已将输出图设为参考图，模式切换为图生图。');
+}
+
+// ─── Modal ───
+function showModal(title, body) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML = body.replace(/\n/g, '<br>');
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+// ─── Boot ───
+init();
 </script>
 </body>
 </html>
